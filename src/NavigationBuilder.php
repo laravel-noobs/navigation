@@ -40,6 +40,8 @@ class NavigationBuilder
      *
      */
     function __construct() {
+        $this->acronym = config('navigation.acronym');
+        $this->page_title = config('navigation.page_title');
         $this->items = array_merge($this->items, config('navigation.navigation'));
         $this->crumbs = array_merge($this->crumbs, config('navigation.crumbs'));
     }
