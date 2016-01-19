@@ -1,0 +1,20 @@
+{
+  "name": "koutsuneka/navigation",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Kou Tsuneka",
+      "email": "koutsuneka@gmail.com"
+    }
+  ],
+  "require": {
+    "php": ">=5.5.9",
+    "illuminate/support": "5.2.*",
+    "illuminate/view": "5.2.*"
+  },
+  "autoload": {
+    "psr-4": {
+      "KouTsuneka\\Navigation\\": "src/"
+    }
+  }
+}
