@@ -82,7 +82,7 @@ class NavigationBuilder
      */
     public function set_sub($name, $sub_name, $text, $active = false, $order = 0, $action = null)
     {
-        if(isset($this->items[$name]))
+        if(array_has($this->items, $name))
         {
             $this->items[$name]['items'][$sub_name] = [
                 'text' => $text,
@@ -103,10 +103,10 @@ class NavigationBuilder
      */
     public function activate($name, $sub_name = null)
     {
-        if(isset($this->items[$name]))
+        if(array_has($this->items, $name))
         {
             $this->items[$name]['active'] = true;
-            if(isset($this->items[$name]['items'][$sub_name]))
+            if(isset($this->items[$name]['items']) && array_has($this->items[$name]['items'], [$sub_name]))
                 $this->items[$name]['items'][$sub_name]['active'] = true;
         }
 
