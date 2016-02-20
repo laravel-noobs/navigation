@@ -56,14 +56,15 @@ class NavigationBuilder
      * @param null $items
      * @return $this
      */
-    public function set($name, $text, $active = false, $action = null, $order = 0, $icon_class = '', $items = null)
+    public function set($name, $text, $active = false, $action = null, $order = 0, $icon_class = '', $items = null, $hidden = null)
     {
         $this->items[$name] = [
             'text' => $text,
             'icon_class' => $icon_class,
             'order' => $order,
             'active' => $active,
-            'items' => $items
+            'items' => $items,
+            'hidden' => $hidden
         ];
         if($action != null)
             $this->items[$name]['action'] = $action;
@@ -80,7 +81,7 @@ class NavigationBuilder
      * @param null $action
      * @return $this
      */
-    public function set_sub($name, $sub_name, $text, $active = false, $order = 0, $action = null)
+    public function set_sub($name, $sub_name, $text, $active = false, $order = 0, $action = null, $hidden = null)
     {
         if(array_has($this->items, $name))
         {
@@ -89,8 +90,11 @@ class NavigationBuilder
                 'active' => $active,
                 'order' => $order
             ];
-            if($action != null)
+            if($action)
                 $this->items[$name]['items'][$sub_name]['action'] = $action;
+
+            if($hidden)
+                $this->items[$name]['items'][$sub_name]['hidden'] = $hidden;
         }
 
         return $this;
@@ -106,7 +110,7 @@ class NavigationBuilder
         if(array_has($this->items, $name))
         {
             $this->items[$name]['active'] = true;
-            if(isset($this->items[$name]['items']) && array_has($this->items[$name]['items'], [$sub_name]))
+            if(isset($this->items[$name]['items']) && array_has($this->items[$name]['items'], $sub_name))
                 $this->items[$name]['items'][$sub_name]['active'] = true;
         }
 
@@ -181,7 +185,7 @@ class NavigationBuilder
     {
         return [
             'acronym' => $this->acronym,
-            'menu_items' => $this->sort ? $this->reconstruct() : $this->items
+            'menu_items' =>  $this->reconstruct()
         ];
     }
 
@@ -212,18 +216,71 @@ class NavigationBuilder
     }
 
     /**
-     *
+     * @return array
      */
     private function reconstruct()
     {
-        $items = array_sort($this->items,  function ($value) {
+        $items = $this->items;
+
+        if($this->sort)
+            $items = $this->sortItems();
+
+        $items = $this->hideItems($items);
+
+        return $items;
+    }
+
+    /**
+     * @param $items
+     * @return mixed
+     */
+    protected function hideItems($items)
+    {
+        foreach($items as $key => &$it)
+        {
+            if($this->supposeToBeHidden($it))
+                array_pull($items, $key);
+
+            if(isset($it['items']))
+            {
+                foreach($it['items'] as $sub_key => $sub_it)
+                    if($this->supposeToBeHidden($sub_it))
+                        array_pull($it['items'], $sub_key);
+                if(empty($it['items']) && !isset($it['action']))
+                    array_pull($items, $key);
+            }
+        }
+        return $items;
+    }
+
+    /**
+     * @param $item
+     * @return bool
+     */
+    protected function supposeToBeHidden($item)
+    {
+        if(isset($item['hidden']) && (
+                (is_bool($item['hidden']) && $item['hidden']) || (is_callable($item['hidden']) && call_user_func($item['hidden']))
+            ))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @return array
+     */
+    protected function sortItems()
+    {
+        $items = array_sort($this->items, function ($value) {
             return $value['order'];
         });
-        foreach($items as $key => $it)
-        {
-            if(!isset($it['items']))
+        foreach ($items as $key => $it) {
+            if (!isset($it['items']))
                 continue;
-            $items[$key]['items'] = array_sort($it['items'], function($value){
+            $items[$key]['items'] = array_sort($it['items'], function ($value) {
                 return $value['order'];
             });
         }
